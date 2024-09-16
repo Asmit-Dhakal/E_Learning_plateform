@@ -45,10 +45,7 @@ INSTALLED_APPS = [
     'course',
     'recommendations',
     'review',
-
-
-
-
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -82,6 +79,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Shikshya.wsgi.application'
 
+ASGI_APPLICATION = 'Shikshya.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -153,4 +151,10 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': settings.SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
 }
