@@ -17,7 +17,7 @@ class Course(models.Model):
 
 class Booking(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'is_student': True})
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='bookings')  # Add related_name
     booked_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
