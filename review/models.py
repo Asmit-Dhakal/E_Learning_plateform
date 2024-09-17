@@ -7,11 +7,11 @@ from django.conf import settings
 
 class Review(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reviews')
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'is_student': True})
     comment = models.TextField()
 
     def __str__(self):
-        return f'{self.course.title} review by {self.student.gmail}'
+        return f'{self.course.title} review by {self.student.username}'
 
 class Rating(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='ratings')
