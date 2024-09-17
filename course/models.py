@@ -12,7 +12,7 @@ class Course(models.Model):
     validation_date = models.DateField()
     video = models.FileField(upload_to='course_videos/', null=True, blank=True)
     thumbail = models.FileField(upload_to='course_videos/', null=True, blank=True)
-    price = models.DecimalField(max_digits=10)
+    price = models.FloatField()
 
     def __str__(self):
         return self.title
