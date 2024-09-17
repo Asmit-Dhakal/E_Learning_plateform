@@ -4,7 +4,7 @@ from .models import Course, Booking
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'teacher', 'title', 'description', 'video','validation_date', 'price']
+        fields = ['id', 'teacher', 'title', 'description', 'thumbail','video','validation_date', 'price']
         read_only_fields = [ 'teacher']
 
 class BookingSerializer(serializers.ModelSerializer):
