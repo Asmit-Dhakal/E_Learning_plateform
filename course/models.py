@@ -11,6 +11,7 @@ class Course(models.Model):
     description = models.TextField()
     validation_date = models.DateField()
     video = models.FileField(upload_to='course_videos/', null=True, blank=True)
+    thumbail = models.FileField(upload_to='course_videos/', null=True, blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):

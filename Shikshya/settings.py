@@ -27,7 +27,8 @@ SECRET_KEY = 'django-insecure-yo2a1w0s%ko87--vf$a)+j+d27xi0*l!m*l!t56yt-1*j1zin4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+
 
 
 # Application definition
@@ -45,7 +46,8 @@ INSTALLED_APPS = [
     'course',
     'recommendations',
     'review',
-    'channels'
+    'channels',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -76,10 +78,11 @@ TEMPLATES = [
         },
     },
 ]
-
+ASGI_APPLICATION = 'Shikshya.asgi.application'
 WSGI_APPLICATION = 'Shikshya.wsgi.application'
 
-ASGI_APPLICATION = 'Shikshya.asgi.application'
+
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
