@@ -1,18 +1,16 @@
-from bisect import insort
-
 from django.http import Http404
-from django.shortcuts import render
-
-# Create your views here.
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
-
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Course, Booking
-from .serializers import CourseSerializer, BookingSerializer
+from .models import Course, Booking, Chapter, Video
+from .serializers import CourseSerializer, BookingSerializer, ChapterSerializer, VideoSerializer
 
+# ----------------------------------------
+# Course Management
+# ----------------------------------------
 
 class CourseCreateView(generics.CreateAPIView):
     queryset = Course.objects.all()
@@ -41,7 +39,55 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
             raise PermissionDenied("Only the teacher who created the course can update it.")
         serializer.save()
 
+# ----------------------------------------
+# Chapter Management
+# ----------------------------------------
 
+class ChapterCreateView(generics.CreateAPIView):
+    serializer_class = ChapterSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        course = get_object_or_404(Course, id=self.kwargs.get('course_id'))
+        if self.request.user != course.teacher:
+            raise PermissionDenied("Only the teacher who created the course can add chapters.")
+        serializer.save(course=course)
+
+
+class ChapterListView(generics.ListAPIView):
+    serializer_class = ChapterSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, id=self.kwargs.get('course_id'))
+        return Chapter.objects.filter(course=course)
+
+# ----------------------------------------
+# Video Management
+# ----------------------------------------
+
+class VideoCreateView(generics.CreateAPIView):
+    serializer_class = VideoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        chapter = get_object_or_404(Chapter, id=self.kwargs.get('chapter_id'))
+        if self.request.user != chapter.course.teacher:
+            raise PermissionDenied("Only the teacher who created the course can add videos.")
+        serializer.save(chapter=chapter)
+
+
+class VideoListView(generics.ListAPIView):
+    serializer_class = VideoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        chapter = get_object_or_404(Chapter, id=self.kwargs.get('chapter_id'))
+        return Video.objects.filter(chapter=chapter)
+
+# ----------------------------------------
+# Booking Management
+# ----------------------------------------
 
 class BookCourseView(generics.CreateAPIView):
     queryset = Booking.objects.all()
@@ -62,6 +108,7 @@ class BookCourseView(generics.CreateAPIView):
             return Response({'detail': 'Already booked for this course.'}, status=status.HTTP_400_BAD_REQUEST)
 
         return super().post(request, *args, **kwargs)
+
 
 class BookedCoursesView(generics.ListAPIView):
     serializer_class = BookingSerializer
@@ -87,7 +134,6 @@ class BookingDetailView(generics.RetrieveAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
-
 
 
 class DeleteBookingView(generics.DestroyAPIView):
