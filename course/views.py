@@ -5,7 +5,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from .models import Course, Booking, Chapter, Video, Payment
-from .serializers import CourseSerializer, BookingSerializer, ChapterSerializer, VideoSerializer, PaymentSerializer
+from .serializers import CourseSerializer, BookingSerializer, ChapterSerializer, VideoSerializer, PaymentSerializer, \
+    CourseDetailSerializer
 import os
 from django.http import StreamingHttpResponse, Http404
 import re
@@ -50,8 +51,6 @@ def file_chunk(path, start=0, length=None, chunk_size=8192):
 # Course Management
 # ----------------------------------------
 
-
-
 class CourseListView(APIView):
     def get(self, request, *args, **kwargs):
         courses = Course.objects.all()
@@ -65,7 +64,7 @@ class CourseDetailView(APIView):
 
     def get(self, request, pk, *args, **kwargs):
         course = self.get_object(pk)
-        serializer = CourseSerializer(course)
+        serializer = CourseDetailSerializer(course)
         return Response(serializer.data)
 
     def put(self, request, pk, *args, **kwargs):
@@ -325,5 +324,8 @@ class EsewaPaymentSuccessView(APIView):
             return Response({"detail": "Payment successful"}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "Payment verification failed"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 

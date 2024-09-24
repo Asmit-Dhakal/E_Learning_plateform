@@ -17,12 +17,20 @@ class ChapterSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Course
+        fields = ['id', 'teacher', 'title', 'description', 'thumbnail', 'validation_date', 'price']
+        read_only_fields = ['teacher']
+
+class CourseDetailSerializer(serializers.ModelSerializer):
     chapters = ChapterSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
         fields = ['id', 'teacher', 'title', 'description', 'thumbnail', 'validation_date', 'price', 'chapters']
         read_only_fields = ['teacher']
+
 
 
 class PaymentSerializer(serializers.ModelSerializer):

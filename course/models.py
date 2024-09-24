@@ -6,9 +6,8 @@ class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     validation_date = models.DateField()
-    thumbnail = models.FileField(upload_to='thumbnailphoto/', null=True, blank=True)
+    thumbnail = models.FileField(upload_to='thumbnail_photo/', null=True, blank=True)
     price = models.FloatField(null=True, blank=True)
-
     def __str__(self):
         return self.title
 
