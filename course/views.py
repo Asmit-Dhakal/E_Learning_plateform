@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -326,6 +326,8 @@ class EsewaPaymentSuccessView(APIView):
             return Response({"detail": "Payment verification failed"}, status=status.HTTP_400_BAD_REQUEST)
 
 
+def about(request):
 
+    return render(request, 'course/teaachercourse.html',)
 
 
