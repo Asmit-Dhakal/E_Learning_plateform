@@ -9,5 +9,5 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ['id', 'teacher', 'title', 'description', 'video','thumbail','validation_date', 'price']
+        fields = ['id', 'teacher', 'title', 'description', 'thumbnail','validation_date', 'price']
         read_only_fields = [ 'teacher']

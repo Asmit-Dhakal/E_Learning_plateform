@@ -7,7 +7,7 @@ class Course(models.Model):
     description = models.TextField()
     validation_date = models.DateField()
     thumbnail = models.FileField(upload_to='thumbnailphoto/', null=True, blank=True)
-    price = models.FloatField()
+    price = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -16,7 +16,6 @@ class Chapter(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='chapters')
     title = models.CharField(max_length=255)
     description = models.TextField()
-    short_clip = models.FileField(upload_to='short_clips/', null=True, blank=True)  # Preview clip for the chapter
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
@@ -40,3 +39,26 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.student.username} booked {self.course.title}"
+
+class Payment(models.Model):
+    PAYMENT_CHOICES = [
+        ('khalti', 'Khalti'),
+        ('esewa', 'eSewa'),
+    ]
+    STATUS_CHOICES = [
+        ('completed', 'Completed'),
+        ('pending', 'Pending'),
+        ('failed', 'Failed'),
+    ]
+
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'is_student': True})
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
+    payment_gateway = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='esewa')
+    transaction_id = models.CharField(max_length=100, unique=True)
+    ref_id = models.CharField(max_length=100, null=True, blank=True)  # Store reference ID for the payment
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.student.username} - {self.course.title} - {self.transaction_id}"

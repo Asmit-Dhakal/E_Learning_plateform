@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 from django.conf import settings
@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-yo2a1w0s%ko87--vf$a)+j+d27xi0*l!m*l!t56yt-1*j1zin4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*', '192.168.1.104']
 
 
 
@@ -43,11 +43,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'users',
+    'profiles',
     'course',
     'review',
     'channels',
     'chat',
 ]
+ASGI_APPLICATION = 'Shikshya.asgi.application'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -77,7 +79,7 @@ TEMPLATES = [
         },
     },
 ]
-ASGI_APPLICATION = 'Shikshya.asgi.application'
+
 WSGI_APPLICATION = 'Shikshya.wsgi.application'
 
 
@@ -127,7 +129,9 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# Media settings
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -156,7 +160,7 @@ SIMPLE_JWT = {
 }
 
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
 }
