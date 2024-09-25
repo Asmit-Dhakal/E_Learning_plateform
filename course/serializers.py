@@ -17,7 +17,7 @@ class CourseSerializer(serializers.ModelSerializer):
         if obj.thumbnail:
             if request:
                 return request.build_absolute_uri(obj.thumbnail.url)
-            return f" http://192.168.18.237:8000{obj.thumbnail.url}"  # Provide a static base URL for the thumbnail
+            return f"https://192.168.18.237:8003{obj.thumbnail.url}"  # Provide a static base URL for the thumbnail
         return ''
 
 
@@ -33,7 +33,7 @@ class VideoSerializer(serializers.ModelSerializer):
         if obj.video_file:
             if request:
                 return request.build_absolute_uri(obj.video_file.url)
-            return f" http://192.168.18.237:8000{obj.video_file.url}"  # Provide a static base URL for the video file
+            return f"https://192.168.18.237:8003{obj.video_file.url}"  # Provide a static base URL for the video file
         return ''
 
 
@@ -59,7 +59,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         if obj.thumbnail:
             if request:
                 return request.build_absolute_uri(obj.thumbnail.url)
-            return f" http://192.168.18.237:8000{obj.thumbnail.url}"  # Provide a static base URL for the thumbnail
+            return f"https://192.168.18.237:8003{obj.thumbnail.url}"  # Provide a static base URL for the thumbnail
         return ''
 
 
@@ -119,9 +119,10 @@ class TeacherDashboardSerializer(serializers.ModelSerializer):
         except TeacherProfile.DoesNotExist:
             return "No expertise provided"
 
+    # Use CourseDetailSerializer to include chapters and videos
     def get_courses(self, obj):
         courses = Course.objects.filter(teacher=obj)
-        return CourseSerializer(courses, many=True, context=self.context).data if courses.exists() else []
+        return CourseDetailSerializer(courses, many=True, context=self.context).data if courses.exists() else []
 
     def get_bookings(self, obj):
         bookings = Booking.objects.filter(course__teacher=obj)

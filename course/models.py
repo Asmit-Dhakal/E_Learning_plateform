@@ -26,7 +26,7 @@ class Course(models.Model):
 
     def full_image_url(self):
         if self.thumbnail:
-            return f"http://192.168.18.237:8000{self.thumbnail.url}"  # Replace 127.0.0.1 with your IP if needed
+            return f"https://192.168.18.237:8003{self.thumbnail.url}"  # Replace 127.0.0.1 with your IP if needed
         return ''
 
 
@@ -56,7 +56,7 @@ class Video(models.Model):
 
     def full_video_url(self):
        if self.video_file:
-        return f"  http://192.168.18.237:8000{self.video_file.url}"  # Replace 127.0.0.1 with your IP if needed
+        return f"https://192.168.18.237:8003{self.video_file.url}"  # Replace 127.0.0.1 with your IP if needed
        return ''
 
 

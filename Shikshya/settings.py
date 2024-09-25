@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'course',
     'review',
     'channels',
+    'django_extensions',
     'chat',
 ]
 ASGI_APPLICATION = 'Shikshya.asgi.application'
