@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .profile, .courses, .bookings, .payments {
+            background-color: #ffffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .profile-info p, .course-item p, .booking-item p, .payment-item p {
+            margin: 5px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            font-size: 16px;
+            color: #777;
+        }
+        .edit-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        .course-item, .booking-item, .payment-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .course-item h3, .booking-item h3, .payment-item h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .course-item img {
+            max-width: 100px;
+            border-radius: 5px;
+            margin-right: 15px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Teacher Profile -->
+    <div class="profile">
+        <h2>Teacher Profile</h2>
+        <button class="edit-button" onclick="editProfile()">Edit Profile</button>
+        <div id="loading-profile" class="loading">Loading profile...</div>
+        <div id="profile-info" class="profile-info hidden">
+            <p><strong>Username:</strong> <span id="teacher-username"></span></p>
+            <p><strong>Name:</strong> <span id="teacher-name"></span></p>
+            <p><strong>Email:</strong> <span id="teacher-email"></span></p>
+            <p><strong>Bio:</strong> <span id="teacher-bio"></span></p>
+            <p><strong>Expertise:</strong> <span id="teacher-expertise"></span></p>
+            <p><strong>Address:</strong> <span id="teacher-address"></span></p>
+            <p><strong>Country:</strong> <span id="teacher-country"></span></p>
+            <p><strong>Phone Number:</strong> <span id="teacher-phone"></span></p>
+        </div>
+    </div>
+
+    <!-- Courses Managed by Teacher -->
+    <div class="courses">
+        <h2>Your Courses</h2>
+        <div id="loading-courses" class="loading">Loading courses...</div>
+        <div id="courses-container" class="hidden"></div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="bookings">
+        <h2>Bookings for Your Courses</h2>
+        <div id="loading-bookings" class="loading">Loading bookings...</div>
+        <div id="bookings-container" class="hidden"></div>
+    </div>
+
+    <!-- Payments -->
+    <div class="payments">
+        <h2>Payments for Your Courses</h2>
+        <div id="loading-payments" class="loading">Loading payments...</div>
+        <div id="payments-container" class="hidden"></div>
+    </div>
+</div>
+
+<script>
+// Function to show or hide loading indicators
+function toggleLoading(section, show) {
+    const loadingElement = document.getElementById(`loading-${section}`);
+    const contentElement = document.getElementById(`${section}-container`);
+
+    if (loadingElement && contentElement) {
+        if (show) {
+            loadingElement.classList.remove('hidden');
+            contentElement.classList.add('hidden');
+        } else {
+            loadingElement.classList.add('hidden');
+            contentElement.classList.remove('hidden');
+        }
+    } else {
+        console.error(`Element with id 'loading-${section}' or '${section}-container' not found`);
+    }
+}
+
+// Basic edit profile function for button (to be implemented)
+function editProfile() {
+    alert("Edit profile functionality not implemented yet.");
+}
+
+// Fetch the dashboard data using the token
+async function fetchDashboardData() {
+    const token = localStorage.getItem('access_token'); // Get token from localStorage
+    console.log('Access Token:', token); // Print the token
+
+    if (!token) {
+        alert('You are not authenticated. Please log in.');
+        window.location.replace('/login/');
+        return;
+    }
+
+    try {
+        toggleLoading('profile', true);
+        toggleLoading('courses', true);
+        toggleLoading('bookings', true);
+        toggleLoading('payments', true);
+
+        const response = await fetch('http://127.0.0.1:8000/api/teacher-dashboard/', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Attach the token in the Authorization header
+                'Content-Type': 'application/json',
+            },
+        });
+
+        console.log('Response Status:', response.status); // Print the status of the response
+        const data = await response.json();
+        console.log('API Response Data:', data); // Print the data returned from the API
+
+        if (response.ok) {
+            // Populate profile
+            document.getElementById('teacher-username').textContent = data.profile.username || "N/A";
+            document.getElementById('teacher-name').textContent = `${data.profile.first_name} ${data.profile.last_name}` || "N/A";
+            document.getElementById('teacher-email').textContent = data.profile.email || "N/A";
+            document.getElementById('teacher-bio').textContent = data.profile.bio || "N/A";
+            document.getElementById('teacher-expertise').textContent = data.profile.expertise || "N/A";
+            document.getElementById('teacher-address').textContent = data.profile.address || "N/A";
+            document.getElementById('teacher-country').textContent = data.profile.country || "N/A";
+            document.getElementById('teacher-phone').textContent = data.profile.phone_number || "N/A";
+
+            toggleLoading('profile', false);
+
+            // Populate courses
+            const coursesContainer = document.getElementById('courses-container');
+            if (Array.isArray(data.courses) && data.courses.length > 0) {
+                data.courses.forEach(course => {
+                    const courseElement = `<div class="course-item">
+                        <img src="${course.thumbnail ? course.thumbnail : 'default-thumbnail.png'}" alt="Thumbnail">
+                        <div>
+                            <h3>${course.title}</h3>
+                            <p>${course.description}</p>
+                            <p><strong>Price:</strong> $${course.price}</p>
+                            <p><strong>Validation Date:</strong> ${course.validation_date}</p>
+                        </div>
+                    </div>`;
+                    coursesContainer.innerHTML += courseElement;
+                });
+            } else {
+                coursesContainer.innerHTML = '<p>No courses available.</p>';
+            }
+            toggleLoading('courses', false);
+
+            // Populate bookings (not included in the API response)
+            const bookingsContainer = document.getElementById('bookings-container');
+            if (Array.isArray(data.bookings) && data.bookings.length > 0) {
+                data.bookings.forEach(booking => {
+                    const bookingElement = `<div class="booking-item">
+                        <p><strong>Student:</strong> ${booking.student}</p>
+                        <p><strong>Course:</strong> ${booking.course.title}</p>
+                        <p><strong>Booked on:</strong> ${booking.booked_on}</p>
+                    </div>`;
+                    bookingsContainer.innerHTML += bookingElement;
+                });
+            } else {
+                bookingsContainer.innerHTML = '<p>No bookings available.</p>';
+            }
+            toggleLoading('bookings', false);
+
+            // Populate payments
+            const paymentsContainer = document.getElementById('payments-container');
+            if (Array.isArray(data.payments) && data.payments.length > 0) {
+                data.payments.forEach(payment => {
+                    const paymentElement = `<div class="payment-item">
+                        <p><strong>Transaction ID:</strong> ${payment.transaction_id}</p>
+                        <p><strong>Amount:</strong> $${payment.amount}</p>
+                        <p><strong>Status:</strong> ${payment.status}</p>
+                    </div>`;
+                    paymentsContainer.innerHTML += paymentElement;
+                });
+            } else {
+                paymentsContainer.innerHTML = '<p>No payments available.</p>';
+            }
+            toggleLoading('payments', false);
+        } else {
+            console.error('Failed to fetch dashboard data:', data);
+            alert('Failed to fetch dashboard data. Please log in again.');
+            window.location.replace('/login/');
+        }
+    } catch (error) {
+        console.error('Error fetching data:', error); // Log any errors
+        alert('Error fetching data: ' + error.message);
+    }
+}
+
+// Load dashboard data on page load
+document.addEventListener('DOMContentLoaded', fetchDashboardData);
+</script>
+
+</body>
+</html>

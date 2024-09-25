@@ -1,11 +1,38 @@
 from rest_framework import serializers
-from .models import Course, Booking, Chapter, Video, Payment
+from users.models import User  # Import your custom User model
+from profiles.models import TeacherProfile
+from .models import Course, Booking, Payment, Chapter, Video
+
+
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    thumbnail_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ['id', 'teacher', 'title', 'description', 'thumbnail', 'thumbnail_url', 'validation_date', 'price']
+        read_only_fields = ['teacher']
+
+    def get_thumbnail_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail:
+            return request.build_absolute_uri(obj.thumbnail.url) if request else obj.thumbnail.url
+        return ''
 
 
 class VideoSerializer(serializers.ModelSerializer):
+    full_video_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Video
-        fields = ['id', 'title', 'video_file', 'upload_date']
+        fields = ['id', 'title', 'video_file', 'upload_date', 'full_video_url']
+
+    def get_full_video_url(self, obj):
+        request = self.context.get('request')
+        if obj.video_file:
+            return request.build_absolute_uri(obj.video_file.url) if request else obj.video_file.url
+        return ''
 
 
 class ChapterSerializer(serializers.ModelSerializer):
@@ -16,21 +43,20 @@ class ChapterSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'videos']
 
 
-class CourseSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Course
-        fields = ['id', 'teacher', 'title', 'description', 'thumbnail', 'validation_date', 'price']
-        read_only_fields = ['teacher']
-
 class CourseDetailSerializer(serializers.ModelSerializer):
     chapters = ChapterSerializer(many=True, read_only=True)
+    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ['id', 'teacher', 'title', 'description', 'thumbnail', 'validation_date', 'price', 'chapters']
+        fields = ['id', 'teacher', 'title', 'description', 'thumbnail', 'thumbnail_url', 'validation_date', 'price', 'chapters']
         read_only_fields = ['teacher']
 
+    def get_thumbnail_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail:
+            return request.build_absolute_uri(obj.thumbnail.url) if request else obj.thumbnail.url
+        return ''
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -47,17 +73,81 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'course', 'booked_on', 'payment_info']
         read_only_fields = ['student', 'booked_on']
 
-    def create(self, validated_data):
-        payment_data = validated_data.pop('payment_info', None)
-        booking = Booking.objects.create(**validated_data)
 
-        if payment_data:
-            Payment.objects.create(
-                student=booking.student,
-                course=booking.course,
-                amount=booking.course.price,
-                transaction_id=payment_data.get('transaction_id'),
-                status=payment_data.get('status', 'pending')
-            )
+class TeacherProfileEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherProfile
+        fields = ['bio', 'expertise']
 
-        return booking
+
+class TeacherDashboardSerializer(serializers.ModelSerializer):
+    # Teacher Profile Data
+    username = serializers.CharField(read_only=True)  # Username is immutable
+    email = serializers.EmailField(read_only=True)    # Email is immutable
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    address = serializers.CharField()
+    country = serializers.CharField()
+    phone_number = serializers.CharField()
+    bio = serializers.SerializerMethodField()
+    expertise = serializers.SerializerMethodField()
+
+    # Courses managed by the teacher
+    courses = serializers.SerializerMethodField()
+
+    # Bookings for courses managed by the teacher
+    bookings = serializers.SerializerMethodField()
+
+    # Payments for courses managed by the teacher
+    payments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'username', 'email', 'first_name', 'last_name', 'address', 'country', 'phone_number',
+            'bio', 'expertise', 'courses', 'bookings', 'payments'
+        ]
+
+    def get_bio(self, obj):
+        try:
+            profile = TeacherProfile.objects.get(teacher=obj)
+            return profile.bio or "No bio available"
+        except TeacherProfile.DoesNotExist:
+            return "No bio available"
+
+    def get_expertise(self, obj):
+        try:
+            profile = TeacherProfile.objects.get(teacher=obj)
+            return profile.expertise or "No expertise provided"
+        except TeacherProfile.DoesNotExist:
+            return "No expertise provided"
+
+    def get_courses(self, obj):
+        courses = Course.objects.filter(teacher=obj)
+        return CourseSerializer(courses, many=True, context=self.context).data if courses.exists() else []
+
+    def get_bookings(self, obj):
+        bookings = Booking.objects.filter(course__teacher=obj)
+        return BookingSerializer(bookings, many=True, context=self.context).data if bookings.exists() else []
+
+    def get_payments(self, obj):
+        payments = Payment.objects.filter(course__teacher=obj)
+        return PaymentSerializer(payments, many=True).data if payments.exists() else []
+
+    def update(self, instance, validated_data):
+        # Handle updates to the User model fields
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.address = validated_data.get('address', instance.address)
+        instance.country = validated_data.get('country', instance.country)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.save()
+
+        # Handle updates to the TeacherProfile model
+        profile_data = validated_data.get('profile', {})
+        profile, created = TeacherProfile.objects.get_or_create(teacher=instance)
+        profile.bio = profile_data.get('bio', profile.bio)
+        profile.expertise = profile_data.get('expertise', profile.expertise)
+        profile.save()
+
+        return instance

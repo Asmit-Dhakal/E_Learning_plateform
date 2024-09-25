@@ -78,17 +78,6 @@ class LoginView(TokenObtainPairView):
             'role': role
         })
 
-
-# Role-based Dashboard Views
-class TeacherDashboardView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        if not request.user.is_teacher:
-            return Response({'detail': 'Teacher access required.'}, status=status.HTTP_403_FORBIDDEN)
-        return Response({'message': 'Welcome to the Teacher Dashboard!'}, status=status.HTTP_200_OK)
-
-
 class StudentDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -96,3 +85,7 @@ class StudentDashboardView(APIView):
         if not request.user.is_student:
             return Response({'detail': 'Student access required.'}, status=status.HTTP_403_FORBIDDEN)
         return Response({'message': 'Welcome to the Student Dashboard!'}, status=status.HTTP_200_OK)
+
+def login(request):
+
+    return render(request, 'course/login.html')

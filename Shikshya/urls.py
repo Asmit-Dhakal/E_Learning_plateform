@@ -19,11 +19,18 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from course import views as course_views
+from users import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
     path('api/',include('course.urls')),
     path("api/",include('review.urls')),
-    path('api/',include('profiles.urls'))
+    path('api/',include('profiles.urls')),
+    path('',views.login ,name='login'),
+    path('teacher-dashboard/',course_views.dashboard,name='teacher-dashboard'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+

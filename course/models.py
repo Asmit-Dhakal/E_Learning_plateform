@@ -1,15 +1,34 @@
 from django.db import models
 from django.conf import settings
+from django.utils.functional import cached_property
+from django.shortcuts import reverse
 
 class Course(models.Model):
-    teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'is_teacher': True})
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'is_teacher': True}
+    )
     title = models.CharField(max_length=255)
     description = models.TextField()
     validation_date = models.DateField()
     thumbnail = models.FileField(upload_to='thumbnail_photo/', null=True, blank=True)
     price = models.FloatField(null=True, blank=True)
+
     def __str__(self):
         return self.title
+
+    def image_url(self):
+        """Returns the absolute URL for the thumbnail image."""
+        if self.thumbnail:
+            return self.thumbnail.url  # Relative URL for local access
+        return ''
+
+    def full_image_url(self, request):
+        """Returns the full absolute URL for the thumbnail image over the network."""
+        if self.thumbnail:
+            return request.build_absolute_uri(self.thumbnail.url)  # Full URL for network access
+        return ''
 
 class Chapter(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='chapters')
@@ -27,6 +46,20 @@ class Video(models.Model):
 
     def __str__(self):
         return f"{self.chapter.title} - {self.title}"
+
+    def video_url(self):
+        """Returns the relative URL for the video file."""
+        if self.video_file:
+            return self.video_file.url  # Local access URL
+        return ''
+
+    def full_video_url(self, request):
+        """Returns the full absolute URL for the video file over the network."""
+        if self.video_file and hasattr(self.video_file, 'url'):
+            return request.build_absolute_uri(self.video_file.url)  # Full URL for network access
+        return ''
+
+
 
 class Booking(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'is_student': True})
@@ -56,7 +89,7 @@ class Payment(models.Model):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
     payment_gateway = models.CharField(max_length=10, choices=PAYMENT_CHOICES, default='esewa')
     transaction_id = models.CharField(max_length=100, unique=True)
-    ref_id = models.CharField(max_length=100, null=True, blank=True)  # Store reference ID for the payment
+    ref_id = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

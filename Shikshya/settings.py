@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'users',
+    'corsheaders',
     'profiles',
     'course',
     'review',
@@ -59,7 +60,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'Shikshya.urls'
 
@@ -136,11 +140,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # Add app-specific static directories
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-# Static root for production (collectstatic will gather all static files here)
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [ os.path.join(BASE_DIR, 'course/static'),]
 
 # Media files (for handling uploaded files, like video uploads)
 MEDIA_URL = '/media/'

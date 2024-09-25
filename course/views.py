@@ -4,9 +4,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from users.models import User  # Import the User model
+from profiles.models import TeacherProfile
+from profiles.serializers import UserSerializer, TeacherProfileSerializer
 from .models import Course, Booking, Chapter, Video, Payment
 from .serializers import CourseSerializer, BookingSerializer, ChapterSerializer, VideoSerializer, PaymentSerializer, \
-    CourseDetailSerializer
+    CourseDetailSerializer, TeacherDashboardSerializer
 import os
 from django.http import StreamingHttpResponse, Http404
 import re
@@ -266,7 +269,6 @@ class PaymentCreateView(APIView):
 
         return Response({'detail': 'Payment completed successfully.'}, status=status.HTTP_200_OK)
 
-
 # ----------------------------------------
 # eSewa and  Payment Integration
 # ----------------------------------------
@@ -326,8 +328,48 @@ class EsewaPaymentSuccessView(APIView):
             return Response({"detail": "Payment verification failed"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def about(request):
+class TeacherDashboardView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    return render(request, 'course/teaachercourse.html',)
+    def get(self, request):
+        # Ensure the user is a teacher
+        if not request.user.is_teacher:
+            return Response({"detail": "Only teachers can access the dashboard."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Fetch teacher profile details (handle missing profile gracefully)
+        try:
+            profile = TeacherProfile.objects.get(teacher=request.user)
+            profile_serializer = TeacherProfileSerializer(profile)
+        except TeacherProfile.DoesNotExist:
+            profile_serializer = None
+
+        # Fetch teacher's courses
+        courses = Course.objects.filter(teacher=request.user)
+        courses_serializer = CourseSerializer(courses, many=True)
+
+        # Fetch payments related to teacher's courses
+        payments = Payment.objects.filter(course__teacher=request.user)
+        payments_serializer = PaymentSerializer(payments, many=True)
+
+        # Combine all data into one response
+        return Response({
+            'profile': {
+                'username': request.user.username,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+                'email': request.user.email,
+                'address': request.user.address,
+                'country': request.user.country,
+                'phone_number': request.user.phone_number,
+                'bio': profile_serializer.data['bio'] if profile_serializer else "No bio available",
+                'expertise': profile_serializer.data['expertise'] if profile_serializer else "No expertise available"
+            },
+            'courses': courses_serializer.data if courses else [],
+            'payments': payments_serializer.data if payments else [],
+        }, status=status.HTTP_200_OK)
 
 
+
+
+def dashboard(request):
+    return render(request, 'course/teacher_dashboard.html')
