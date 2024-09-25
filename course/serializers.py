@@ -1,9 +1,7 @@
 from rest_framework import serializers
-from users.models import User  # Import your custom User model
-from profiles.models import TeacherProfile
 from .models import Course, Booking, Payment, Chapter, Video
-
-
+from profiles.models import TeacherProfile  # Assuming TeacherProfile is another app's model
+from users.models import User  # Assuming User is your custom User model
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -17,7 +15,9 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_thumbnail_url(self, obj):
         request = self.context.get('request')
         if obj.thumbnail:
-            return request.build_absolute_uri(obj.thumbnail.url) if request else obj.thumbnail.url
+            if request:
+                return request.build_absolute_uri(obj.thumbnail.url)
+            return f" http://192.168.18.237:8000{obj.thumbnail.url}"  # Provide a static base URL for the thumbnail
         return ''
 
 
@@ -31,7 +31,9 @@ class VideoSerializer(serializers.ModelSerializer):
     def get_full_video_url(self, obj):
         request = self.context.get('request')
         if obj.video_file:
-            return request.build_absolute_uri(obj.video_file.url) if request else obj.video_file.url
+            if request:
+                return request.build_absolute_uri(obj.video_file.url)
+            return f" http://192.168.18.237:8000{obj.video_file.url}"  # Provide a static base URL for the video file
         return ''
 
 
@@ -55,7 +57,9 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     def get_thumbnail_url(self, obj):
         request = self.context.get('request')
         if obj.thumbnail:
-            return request.build_absolute_uri(obj.thumbnail.url) if request else obj.thumbnail.url
+            if request:
+                return request.build_absolute_uri(obj.thumbnail.url)
+            return f" http://192.168.18.237:8000{obj.thumbnail.url}"  # Provide a static base URL for the thumbnail
         return ''
 
 
@@ -81,9 +85,8 @@ class TeacherProfileEditSerializer(serializers.ModelSerializer):
 
 
 class TeacherDashboardSerializer(serializers.ModelSerializer):
-    # Teacher Profile Data
-    username = serializers.CharField(read_only=True)  # Username is immutable
-    email = serializers.EmailField(read_only=True)    # Email is immutable
+    username = serializers.CharField(read_only=True)
+    email = serializers.EmailField(read_only=True)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     address = serializers.CharField()
@@ -91,14 +94,8 @@ class TeacherDashboardSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField()
     bio = serializers.SerializerMethodField()
     expertise = serializers.SerializerMethodField()
-
-    # Courses managed by the teacher
     courses = serializers.SerializerMethodField()
-
-    # Bookings for courses managed by the teacher
     bookings = serializers.SerializerMethodField()
-
-    # Payments for courses managed by the teacher
     payments = serializers.SerializerMethodField()
 
     class Meta:
@@ -135,7 +132,6 @@ class TeacherDashboardSerializer(serializers.ModelSerializer):
         return PaymentSerializer(payments, many=True).data if payments.exists() else []
 
     def update(self, instance, validated_data):
-        # Handle updates to the User model fields
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.address = validated_data.get('address', instance.address)
@@ -143,7 +139,6 @@ class TeacherDashboardSerializer(serializers.ModelSerializer):
         instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.save()
 
-        # Handle updates to the TeacherProfile model
         profile_data = validated_data.get('profile', {})
         profile, created = TeacherProfile.objects.get_or_create(teacher=instance)
         profile.bio = profile_data.get('bio', profile.bio)

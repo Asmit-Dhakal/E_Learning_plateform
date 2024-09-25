@@ -373,3 +373,5 @@ class TeacherDashboardView(APIView):
 
 def dashboard(request):
     return render(request, 'course/teacher_dashboard.html')
+
+

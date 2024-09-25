@@ -24,11 +24,11 @@ class Course(models.Model):
             return self.thumbnail.url  # Relative URL for local access
         return ''
 
-    def full_image_url(self, request):
-        """Returns the full absolute URL for the thumbnail image over the network."""
+    def full_image_url(self):
         if self.thumbnail:
-            return request.build_absolute_uri(self.thumbnail.url)  # Full URL for network access
+            return f"http://192.168.18.237:8000{self.thumbnail.url}"  # Replace 127.0.0.1 with your IP if needed
         return ''
+
 
 class Chapter(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='chapters')
@@ -53,12 +53,11 @@ class Video(models.Model):
             return self.video_file.url  # Local access URL
         return ''
 
-    def full_video_url(self, request):
-        """Returns the full absolute URL for the video file over the network."""
-        if self.video_file and hasattr(self.video_file, 'url'):
-            return request.build_absolute_uri(self.video_file.url)  # Full URL for network access
-        return ''
 
+    def full_video_url(self):
+       if self.video_file:
+        return f"  http://192.168.18.237:8000{self.video_file.url}"  # Replace 127.0.0.1 with your IP if needed
+       return ''
 
 
 class Booking(models.Model):
